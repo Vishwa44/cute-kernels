@@ -6,7 +6,7 @@ from ....constants import LIBRARY_NAME
 from ....cutotune import cutotune
 from ....math import ceil_divide
 from ....utils import cute_op, get_num_elements_and_hidden_size
-# from .parameters import get_cutotune_parameters
+from .parameters import get_cutotune_parameters
 
 _KERNEL_NAME = "layernorm_forward_triton"
 
@@ -64,7 +64,8 @@ def _layernorm_forward_triton_kernel(
         # Write output
         tl.store(output_ptr + cols, y, mask=mask)
 
-
+@cutotune(**get_cutotune_parameters())
+@cute_op(f"{LIBRARY_NAME}::{_KERNEL_NAME}", mutates_args={"output"})
 def layernorm_forward_triton(
     x: torch.Tensor,
     weight: torch.Tensor | None,
@@ -80,7 +81,7 @@ def layernorm_forward_triton(
     print(num_elements, hidden_size, BLOCK_SIZE)
     if BLOCK_SIZE > hidden_size:
         raise ValueError(f"hidden_size {hidden_size} should be more than the BLOCK_SIZE {BLOCK_SIZE}")
-    print("checking")
+
     with torch.device(x.device):
         _layernorm_forward_triton_kernel[(num_elements, )](
             X_ptr=x,
