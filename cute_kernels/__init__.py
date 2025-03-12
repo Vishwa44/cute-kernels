@@ -29,6 +29,8 @@ from .kernels import (
     gemm_torch,
     linear_cute,
     linear_torch,
+    layernorm_cute,
+    layernorm_torch,
     rmsnorm_cute,
     rmsnorm_torch,
     softmax_cute,
