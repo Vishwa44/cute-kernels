@@ -6,6 +6,7 @@ from .embedding import embedding_cute, embedding_torch
 from .fused_linear_cross_entropy import fused_linear_cross_entropy_cute, fused_linear_cross_entropy_torch
 from .gemm import gemm_cute, gemm_torch
 from .linear import linear_cute, linear_torch
+from .layernorm import layernorm_cute, layernorm_torch
 from .rmsnorm import rmsnorm_cute, rmsnorm_torch
 from .scattermoe import MoE_Torch, MoE_Triton
 from .softmax import softmax_cute, softmax_torch

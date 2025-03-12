@@ -23,12 +23,10 @@ def _layernorm_forward_triton_kernel(
     eps,
     BLOCK_SIZE: tl.constexpr,
 ):
-    # Map the program id to the row of X and Y it should compute.
     row = tl.program_id(0)
     output_ptr += row * stride
     X_ptr += row * stride
 
-    # Compute mean
     mean = 0
     _mean = tl.zeros([BLOCK_SIZE], dtype=tl.float32)
     for off in range(0, N, BLOCK_SIZE):
@@ -37,7 +35,6 @@ def _layernorm_forward_triton_kernel(
         _mean += a
     mean = tl.sum(_mean, axis=0) / N
 
-    # Compute variance
     _var = tl.zeros([BLOCK_SIZE], dtype=tl.float32)
     for off in range(0, N, BLOCK_SIZE):
         cols = off + tl.arange(0, BLOCK_SIZE)
@@ -47,11 +44,9 @@ def _layernorm_forward_triton_kernel(
     var = tl.sum(_var, axis=0) / N
     rstd = 1 / tl.sqrt(var + eps)
 
-    # Write mean / rstd
     tl.store(mean_ptr + row, mean)
     tl.store(rstd_ptr + row, rstd)
 
-    # Normalize and apply linear transformation
     for off in range(0, N, BLOCK_SIZE):
         cols = off + tl.arange(0, BLOCK_SIZE)
         mask = cols < N
@@ -64,8 +59,7 @@ def _layernorm_forward_triton_kernel(
         # Write output
         tl.store(output_ptr + cols, y, mask=mask)
 
-@cutotune(**get_cutotune_parameters())
-@cute_op(f"{LIBRARY_NAME}::{_KERNEL_NAME}", mutates_args={"output"})
+
 def layernorm_forward_triton(
     x: torch.Tensor,
     weight: torch.Tensor | None,
@@ -76,9 +70,8 @@ def layernorm_forward_triton(
     eps: float,
     BLOCK_SIZE: int,
 ) -> None:
-    # num_elements, hidden_size = get_num_elements_and_hidden_size(x)
-    num_elements, hidden_size = x.shape
-    print(num_elements, hidden_size, BLOCK_SIZE)
+    num_elements, hidden_size = get_num_elements_and_hidden_size(x)
+
     if BLOCK_SIZE > hidden_size:
         raise ValueError(f"hidden_size {hidden_size} should be more than the BLOCK_SIZE {BLOCK_SIZE}")
 

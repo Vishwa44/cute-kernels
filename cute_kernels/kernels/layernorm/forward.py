@@ -23,7 +23,6 @@ def _forward(
     output = torch.empty_like(x)
 
     if kernel_backend == "triton":
-        BLOCK_SIZE = get_next_power_of_2(hidden_size)
         assert BLOCK_SIZE <= MAX_TRITON_BLOCK_SIZE
         
         mean = torch.empty(num_elements, device=x.device, dtype=torch.float32)
@@ -41,4 +40,4 @@ def _forward(
     else:
         raise ValueError(f"unexpected kernel_backend ({kernel_backend})")
 
-    return output.reshape(x_shape)
+    return output.reshape(x_shape), mean, rstd

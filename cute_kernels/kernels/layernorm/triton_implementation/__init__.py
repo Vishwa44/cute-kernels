@@ -1,1 +1,2 @@
 from .forward import layernorm_forward_triton
+from .backward import layernorm_backward_triton
